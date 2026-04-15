@@ -5,6 +5,7 @@ SERVICE_NAME="${SERVICE_NAME:-speedtest-vps-api}"
 APP_HOST="${APP_HOST:-0.0.0.0}"
 APP_PORT="${APP_PORT:-6969}"
 SERVICE_USER="${SERVICE_USER:-root}"
+SERVICE_GROUP="${SERVICE_GROUP:-}"
 INSTALL_SPEEDTEST_CLI="${INSTALL_SPEEDTEST_CLI:-1}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +22,22 @@ fail() {
 require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     fail "execute com sudo: sudo $0"
+  fi
+}
+
+validate_environment() {
+  [[ "$APP_PORT" =~ ^[0-9]+$ ]] || fail "APP_PORT deve ser um numero inteiro."
+  [[ "$APP_PORT" -ge 1 && "$APP_PORT" -le 65535 ]] || fail "APP_PORT deve estar entre 1 e 65535."
+
+  command -v apt-get >/dev/null 2>&1 || fail "apt-get nao encontrado. Este script foi feito para Ubuntu/Debian."
+  command -v systemctl >/dev/null 2>&1 || fail "systemctl nao encontrado."
+
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+    if [[ "${ID:-}" != "ubuntu" ]]; then
+      echo "Aviso: sistema detectado: ${PRETTY_NAME:-desconhecido}. O script foi feito para Ubuntu."
+    fi
   fi
 }
 
@@ -65,9 +82,13 @@ write_systemd_service() {
     fail "usuario SERVICE_USER='$SERVICE_USER' nao existe."
   fi
 
+  if [[ -z "$SERVICE_GROUP" ]]; then
+    SERVICE_GROUP="$(id -gn "$SERVICE_USER")"
+  fi
+
   touch "$DATABASE_PATH"
   if [[ "$SERVICE_USER" != "root" ]]; then
-    chown -R "$SERVICE_USER:$SERVICE_USER" "$VENV_DIR" "$DATABASE_PATH"
+    chown -R "$SERVICE_USER:$SERVICE_GROUP" "$VENV_DIR" "$DATABASE_PATH"
   fi
 
   cat >"$SERVICE_FILE" <<EOF
@@ -79,6 +100,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=$SERVICE_USER
+Group=$SERVICE_GROUP
 WorkingDirectory=$PROJECT_DIR
 Environment=PYTHONUNBUFFERED=1
 Environment=SPEEDTEST_DB_PATH=$DATABASE_PATH
@@ -111,6 +133,7 @@ print_summary() {
 }
 
 require_root
+validate_environment
 install_system_packages
 install_speedtest_cli
 install_python_dependencies
