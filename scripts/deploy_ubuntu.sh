@@ -106,6 +106,7 @@ Group=$SERVICE_GROUP
 WorkingDirectory=$PROJECT_DIR
 Environment=PYTHONUNBUFFERED=1
 Environment=SPEEDTEST_DB_PATH=$DATABASE_PATH
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=$VENV_DIR/bin/uvicorn app.main:app --host $APP_HOST --port $APP_PORT
 Restart=always
 RestartSec=5
