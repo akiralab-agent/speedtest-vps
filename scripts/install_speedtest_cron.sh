@@ -5,24 +5,27 @@ MARKER="# speedtest-vps-api-cron"
 DEFAULT_SCHEDULE="0 * * * *"
 DEFAULT_LOG_FILE="/var/log/cron_api.log"
 DEFAULT_MAX_TIME="180"
+DEFAULT_SPEEDTEST_URL="http://127.0.0.1:6969/speedtest"
 
 usage() {
   cat <<'EOF'
 Uso:
+  scripts/install_speedtest_cron.sh
   scripts/install_speedtest_cron.sh "https://sua-api.com/speedtest"
 
 Variaveis opcionais:
   SCHEDULE="0 * * * *"              Agenda cron. Padrao: a cada hora.
   LOG_FILE="/var/log/cron_api.log"  Arquivo de log.
   MAX_TIME="180"                    Timeout do curl em segundos.
+  SPEEDTEST_URL="http://127.0.0.1:6969/speedtest"
 
 Exemplos:
-  scripts/install_speedtest_cron.sh "http://localhost:8000/speedtest"
+  scripts/install_speedtest_cron.sh
 
   SCHEDULE="*/30 * * * *" \
   LOG_FILE="$HOME/speedtest-cron.log" \
   MAX_TIME="240" \
-  scripts/install_speedtest_cron.sh "https://sua-api.com/speedtest?timeout=180"
+  scripts/install_speedtest_cron.sh "http://127.0.0.1:6969/speedtest?timeout=180"
 EOF
 }
 
@@ -36,15 +39,10 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-SPEEDTEST_URL="${1:-${SPEEDTEST_URL:-}}"
+SPEEDTEST_URL="${1:-${SPEEDTEST_URL:-$DEFAULT_SPEEDTEST_URL}}"
 SCHEDULE="${SCHEDULE:-$DEFAULT_SCHEDULE}"
 LOG_FILE="${LOG_FILE:-$DEFAULT_LOG_FILE}"
 MAX_TIME="${MAX_TIME:-$DEFAULT_MAX_TIME}"
-
-[[ -n "$SPEEDTEST_URL" ]] || {
-  usage
-  fail "informe a URL da rota /speedtest."
-}
 
 [[ "$SPEEDTEST_URL" =~ ^https?:// ]] || fail "a URL deve comecar com http:// ou https://."
 [[ "$MAX_TIME" =~ ^[0-9]+$ ]] || fail "MAX_TIME deve ser um numero inteiro."
