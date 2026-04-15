@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 
+from app.models import SpeedtestResult
 from app.speedtest_service import (
     SpeedtestCliError,
     SpeedtestCliNotFoundError,
@@ -20,7 +21,7 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/speedtest", tags=["speedtest"])
+@app.get("/speedtest", response_model=SpeedtestResult, tags=["speedtest"])
 def speedtest(
     timeout: int = Query(
         default=120,
@@ -28,7 +29,7 @@ def speedtest(
         le=600,
         description="Tempo maximo em segundos para aguardar o Speedtest CLI.",
     ),
-):
+) -> SpeedtestResult:
     try:
         return run_speedtest(timeout_seconds=timeout)
     except SpeedtestCliNotFoundError as exc:
