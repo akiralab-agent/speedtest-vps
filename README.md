@@ -44,6 +44,7 @@ Variaveis opcionais:
 SERVICE_NAME="speedtest-vps-api" \
 APP_PORT="6969" \
 SERVICE_USER="root" \
+STATE_DIR="/var/lib/speedtest-vps-api" \
 INSTALL_SPEEDTEST_CLI="1" \
 sudo -E scripts/deploy_ubuntu.sh
 ```

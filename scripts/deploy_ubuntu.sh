@@ -11,7 +11,8 @@ INSTALL_SPEEDTEST_CLI="${INSTALL_SPEEDTEST_CLI:-1}"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 VENV_DIR="${VENV_DIR:-$PROJECT_DIR/.venv}"
-DATABASE_PATH="${SPEEDTEST_DB_PATH:-$PROJECT_DIR/speedtest_results.sqlite3}"
+STATE_DIR="${STATE_DIR:-/var/lib/$SERVICE_NAME}"
+DATABASE_PATH="${SPEEDTEST_DB_PATH:-$STATE_DIR/speedtest_results.sqlite3}"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 
 fail() {
@@ -86,9 +87,10 @@ write_systemd_service() {
     SERVICE_GROUP="$(id -gn "$SERVICE_USER")"
   fi
 
+  mkdir -p "$(dirname "$DATABASE_PATH")"
   touch "$DATABASE_PATH"
   if [[ "$SERVICE_USER" != "root" ]]; then
-    chown -R "$SERVICE_USER:$SERVICE_GROUP" "$VENV_DIR" "$DATABASE_PATH"
+    chown -R "$SERVICE_USER:$SERVICE_GROUP" "$VENV_DIR" "$(dirname "$DATABASE_PATH")"
   fi
 
   cat >"$SERVICE_FILE" <<EOF
@@ -124,6 +126,7 @@ print_summary() {
   echo "Deploy concluido."
   echo "Servico: $SERVICE_NAME"
   echo "Porta: $APP_PORT"
+  echo "Banco SQLite: $DATABASE_PATH"
   echo "URL local: http://127.0.0.1:$APP_PORT"
   echo "Health check: curl http://127.0.0.1:$APP_PORT/health"
   echo
