@@ -84,3 +84,46 @@ O endpoint executa internamente:
 ```bash
 speedtest --accept-license --accept-gdpr -f json
 ```
+
+Cada medicao bem-sucedida e salva automaticamente no SQLite em `speedtest_results.sqlite3`.
+Para usar outro caminho, defina a variavel de ambiente `SPEEDTEST_DB_PATH`.
+
+### Historico para graficos
+
+```bash
+curl "http://localhost:8000/speedtest/history?limit=100"
+```
+
+Resposta:
+
+```json
+{
+  "count": 2,
+  "points": [
+    {
+      "id": 1,
+      "created_at": "2026-04-15T16:30:00.000000Z",
+      "download_mbps": 100.0,
+      "upload_mbps": 50.0,
+      "ping_latency_ms": 8.123,
+      "ping_jitter_ms": 0.52,
+      "isp": "Example ISP",
+      "server_name": "Example Server",
+      "server_location": "Sao Paulo",
+      "server_country": "Brazil"
+    },
+    {
+      "id": 2,
+      "created_at": "2026-04-15T16:35:00.000000Z",
+      "download_mbps": 98.4,
+      "upload_mbps": 49.7,
+      "ping_latency_ms": 8.4,
+      "ping_jitter_ms": 0.61,
+      "isp": "Example ISP",
+      "server_name": "Example Server",
+      "server_location": "Sao Paulo",
+      "server_country": "Brazil"
+    }
+  ]
+}
+```

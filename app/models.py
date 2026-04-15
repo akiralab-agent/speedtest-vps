@@ -29,3 +29,26 @@ class SpeedtestResult(BaseModel):
     server: SpeedtestServer | None = None
     isp: str | None = None
     result_url: str | None = None
+
+
+class SpeedtestRecord(SpeedtestResult):
+    id: int
+    created_at: str
+
+
+class SpeedtestTimeSeriesPoint(BaseModel):
+    id: int
+    created_at: str
+    download_mbps: float
+    upload_mbps: float
+    ping_latency_ms: float
+    ping_jitter_ms: float | None = None
+    isp: str | None = None
+    server_name: str | None = None
+    server_location: str | None = None
+    server_country: str | None = None
+
+
+class SpeedtestTimeSeriesResponse(BaseModel):
+    count: int
+    points: list[SpeedtestTimeSeriesPoint]

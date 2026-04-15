@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query
 
-from app.models import SpeedtestResult
+from app.database import init_database, list_speedtest_points, save_speedtest_result
+from app.models import SpeedtestRecord, SpeedtestTimeSeriesResponse
 from app.speedtest_service import (
     SpeedtestCliError,
     SpeedtestCliNotFoundError,
@@ -16,12 +17,17 @@ app = FastAPI(
 )
 
 
+@app.on_event("startup")
+def startup() -> None:
+    init_database()
+
+
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/speedtest", response_model=SpeedtestResult, tags=["speedtest"])
+@app.get("/speedtest", response_model=SpeedtestRecord, tags=["speedtest"])
 def speedtest(
     timeout: int = Query(
         default=120,
@@ -29,9 +35,10 @@ def speedtest(
         le=600,
         description="Tempo maximo em segundos para aguardar o Speedtest CLI.",
     ),
-) -> SpeedtestResult:
+) -> SpeedtestRecord:
     try:
-        return run_speedtest(timeout_seconds=timeout)
+        result = run_speedtest(timeout_seconds=timeout)
+        return save_speedtest_result(result)
     except SpeedtestCliNotFoundError as exc:
         raise HTTPException(
             status_code=503,
@@ -46,3 +53,20 @@ def speedtest(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except SpeedtestCliError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get(
+    "/speedtest/history",
+    response_model=SpeedtestTimeSeriesResponse,
+    tags=["speedtest"],
+)
+def speedtest_history(
+    limit: int = Query(
+        default=100,
+        ge=1,
+        le=5000,
+        description="Quantidade maxima de medicoes retornadas em ordem cronologica.",
+    ),
+) -> SpeedtestTimeSeriesResponse:
+    points = list_speedtest_points(limit=limit)
+    return SpeedtestTimeSeriesResponse(count=len(points), points=points)
