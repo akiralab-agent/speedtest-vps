@@ -24,6 +24,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ## Deploy no Ubuntu
 
 O script de deploy cria o virtualenv, instala os `requirements.txt`, instala pacotes do sistema, configura o Ookla Speedtest CLI e cria um service no systemd rodando na porta `6969`.
+No deploy via systemd, o SQLite fica em `/var/lib/speedtest-vps-api/speedtest_results.sqlite3`.
 
 ```bash
 chmod +x scripts/deploy_ubuntu.sh
