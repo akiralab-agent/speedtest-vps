@@ -129,3 +129,29 @@ Resposta:
   ]
 }
 ```
+
+## Cron no Ubuntu
+
+Use o script abaixo para instalar uma chamada periodica da rota `/speedtest` no crontab:
+
+```bash
+chmod +x scripts/install_speedtest_cron.sh
+scripts/install_speedtest_cron.sh "http://localhost:8000/speedtest"
+```
+
+Por padrao, ele instala uma execucao a cada hora:
+
+```cron
+0 * * * * /usr/bin/curl --fail --silent --show-error --max-time 180 "http://localhost:8000/speedtest" >> "/var/log/cron_api.log" 2>&1 # speedtest-vps-api-cron
+```
+
+Configuracao com variaveis:
+
+```bash
+SCHEDULE="*/30 * * * *" \
+LOG_FILE="$HOME/speedtest-cron.log" \
+MAX_TIME="240" \
+scripts/install_speedtest_cron.sh "https://sua-api.com/speedtest?timeout=180"
+```
+
+O script e idempotente: ao rodar novamente, ele substitui a entrada antiga marcada com `# speedtest-vps-api-cron` em vez de duplicar o cron.
