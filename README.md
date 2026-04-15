@@ -21,6 +21,39 @@ pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+## Deploy no Ubuntu
+
+O script de deploy cria o virtualenv, instala os `requirements.txt`, instala pacotes do sistema, configura o Ookla Speedtest CLI e cria um service no systemd rodando na porta `6969`.
+
+```bash
+chmod +x scripts/deploy_ubuntu.sh
+sudo scripts/deploy_ubuntu.sh
+```
+
+Depois do deploy:
+
+```bash
+curl http://127.0.0.1:6969/health
+systemctl status speedtest-vps-api
+journalctl -u speedtest-vps-api -f
+```
+
+Variaveis opcionais:
+
+```bash
+SERVICE_NAME="speedtest-vps-api" \
+APP_PORT="6969" \
+SERVICE_USER="root" \
+INSTALL_SPEEDTEST_CLI="1" \
+sudo -E scripts/deploy_ubuntu.sh
+```
+
+Para pular a instalacao do Ookla Speedtest CLI:
+
+```bash
+INSTALL_SPEEDTEST_CLI=0 sudo -E scripts/deploy_ubuntu.sh
+```
+
 ## Endpoints
 
 ### Health check
