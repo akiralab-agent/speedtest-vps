@@ -53,6 +53,8 @@ Exemplo de resposta:
 
 ```json
 {
+  "id": 1,
+  "created_at": "2026-04-15T16:30:00.000000Z",
   "download": {
     "bandwidth_bytes_per_second": 12500000,
     "bits_per_second": 100000000,
