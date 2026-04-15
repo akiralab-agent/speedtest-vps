@@ -14,6 +14,7 @@ VENV_DIR="${VENV_DIR:-$PROJECT_DIR/.venv}"
 STATE_DIR="${STATE_DIR:-/var/lib/$SERVICE_NAME}"
 DATABASE_PATH="${SPEEDTEST_DB_PATH:-$STATE_DIR/speedtest_results.sqlite3}"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
+OOKLA_APT_SOURCE="/etc/apt/sources.list.d/ookla_speedtest-cli.list"
 
 fail() {
   echo "Erro: $*" >&2
@@ -42,9 +43,29 @@ validate_environment() {
   fi
 }
 
+normalize_ookla_apt_source() {
+  [[ -f "$OOKLA_APT_SOURCE" ]] || return 0
+  grep -q "packagecloud.io/ookla/speedtest-cli" "$OOKLA_APT_SOURCE" || return 0
+
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+  fi
+
+  case "${VERSION_CODENAME:-${UBUNTU_CODENAME:-}}" in
+    noble)
+      if grep -q " noble " "$OOKLA_APT_SOURCE"; then
+        echo "Corrigindo repositório Ookla para Ubuntu 24.04: noble -> jammy"
+        sed -i 's/ noble / jammy /g' "$OOKLA_APT_SOURCE"
+      fi
+      ;;
+  esac
+}
+
 install_system_packages() {
   export DEBIAN_FRONTEND=noninteractive
 
+  normalize_ookla_apt_source
   apt-get update
   apt-get install -y \
     ca-certificates \
@@ -68,6 +89,7 @@ install_speedtest_cli() {
 
   echo "Instalando Ookla Speedtest CLI..."
   curl -fsSL https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
+  normalize_ookla_apt_source
   apt-get update
   apt-get install -y speedtest
 }
@@ -138,6 +160,7 @@ print_summary() {
 
 require_root
 validate_environment
+normalize_ookla_apt_source
 install_system_packages
 install_speedtest_cli
 install_python_dependencies
