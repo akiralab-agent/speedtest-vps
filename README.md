@@ -172,13 +172,13 @@ Use o script abaixo para instalar uma chamada periodica da rota `/speedtest` no 
 
 ```bash
 chmod +x scripts/install_speedtest_cron.sh
-scripts/install_speedtest_cron.sh "http://localhost:8000/speedtest"
+sudo scripts/install_speedtest_cron.sh
 ```
 
-Por padrao, ele instala uma execucao a cada hora:
+Por padrao, ele aponta para a API criada pelo `scripts/deploy_ubuntu.sh`, na porta `6969`, e instala uma execucao a cada hora:
 
 ```cron
-0 * * * * /usr/bin/curl --fail --silent --show-error --max-time 180 "http://localhost:8000/speedtest" >> "/var/log/cron_api.log" 2>&1 # speedtest-vps-api-cron
+0 * * * * /usr/bin/curl --fail --silent --show-error --max-time 180 "http://127.0.0.1:6969/speedtest" >> "/var/log/cron_api.log" 2>&1 # speedtest-vps-api-cron
 ```
 
 Configuracao com variaveis:
@@ -187,7 +187,7 @@ Configuracao com variaveis:
 SCHEDULE="*/30 * * * *" \
 LOG_FILE="$HOME/speedtest-cron.log" \
 MAX_TIME="240" \
-scripts/install_speedtest_cron.sh "https://sua-api.com/speedtest?timeout=180"
+scripts/install_speedtest_cron.sh "http://127.0.0.1:6969/speedtest?timeout=180"
 ```
 
 O script e idempotente: ao rodar novamente, ele substitui a entrada antiga marcada com `# speedtest-vps-api-cron` em vez de duplicar o cron.
