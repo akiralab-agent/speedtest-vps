@@ -50,6 +50,7 @@ def _server_result(payload: dict[str, Any] | None) -> SpeedtestServer | None:
 def parse_speedtest_output(stdout: str) -> SpeedtestResult:
     try:
         data = json.loads(stdout)
+        result_data = data.get("result") or {}
         result = SpeedtestResult(
             download=_bandwidth_result(data["download"]),
             upload=_bandwidth_result(data["upload"]),
@@ -59,7 +60,7 @@ def parse_speedtest_output(stdout: str) -> SpeedtestResult:
             ),
             server=_server_result(data.get("server")),
             isp=data.get("isp"),
-            result_url=data.get("result", {}).get("url"),
+            result_url=result_data.get("url"),
         )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError, ValidationError) as exc:
         raise SpeedtestExecutionError(

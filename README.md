@@ -10,7 +10,7 @@ API FastAPI para medir a velocidade de conexao do servidor usando o Ookla Speedt
 ## Instalar
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```

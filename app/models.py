@@ -5,7 +5,7 @@ class BandwidthResult(BaseModel):
     bandwidth_bytes_per_second: int = Field(
         description="Valor bruto retornado pelo Speedtest CLI em bytes por segundo."
     )
-    bits_per_second: float
+    bits_per_second: int
     mbps: float
 
 
