@@ -181,6 +181,8 @@ Por padrao, ele aponta para a API criada pelo `scripts/deploy_ubuntu.sh`, na por
 0 * * * * /usr/bin/curl --fail --silent --show-error --max-time 180 "http://127.0.0.1:6969/speedtest" >> "/var/log/cron_api.log" 2>&1 # speedtest-vps-api-cron
 ```
 
+Ao executar com `sudo`, o script tambem garante que o servico `cron` esteja habilitado e rodando. Se voce rodar sem `sudo`, defina `LOG_FILE` para um caminho gravavel pelo usuario atual.
+
 Configuracao com variaveis:
 
 ```bash
