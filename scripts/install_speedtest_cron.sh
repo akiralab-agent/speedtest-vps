@@ -34,6 +34,40 @@ fail() {
   exit 1
 }
 
+require_cron_service() {
+  command -v systemctl >/dev/null 2>&1 || return 0
+
+  if systemctl is-active --quiet cron; then
+    return 0
+  fi
+
+  if ! systemctl cat cron >/dev/null 2>&1; then
+    echo "Aviso: nao foi possivel verificar o servico cron via systemctl."
+    echo "       Confirme manualmente que o daemon do cron esta rodando."
+    return 0
+  fi
+
+  if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+    fail "o servico cron nao esta ativo. Execute: sudo systemctl enable --now cron"
+  fi
+
+  echo "Servico cron nao esta ativo. Habilitando e iniciando..."
+  systemctl enable --now cron || fail "nao foi possivel iniciar o servico cron."
+}
+
+prepare_log_file() {
+  local log_dir
+  log_dir="$(dirname "$LOG_FILE")"
+
+  mkdir -p "$log_dir" || fail "nao foi possivel criar o diretorio de log '$log_dir'."
+  touch "$LOG_FILE" || {
+    fail "nao foi possivel criar '$LOG_FILE'. Execute com sudo ou defina LOG_FILE para um caminho gravavel."
+  }
+  [[ -w "$LOG_FILE" ]] || {
+    fail "o arquivo de log '$LOG_FILE' nao e gravavel. Execute com sudo ou defina LOG_FILE para um caminho gravavel."
+  }
+}
+
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
   exit 0
@@ -50,19 +84,8 @@ MAX_TIME="${MAX_TIME:-$DEFAULT_MAX_TIME}"
 command -v curl >/dev/null 2>&1 || fail "curl nao encontrado. Instale com: sudo apt-get install -y curl"
 command -v crontab >/dev/null 2>&1 || fail "crontab nao encontrado. Instale com: sudo apt-get install -y cron"
 
-if command -v systemctl >/dev/null 2>&1; then
-  if ! systemctl is-active --quiet cron; then
-    echo "Aviso: o servico cron nao esta ativo. No Ubuntu, habilite com:"
-    echo "  sudo systemctl enable --now cron"
-  fi
-fi
-
-log_dir="$(dirname "$LOG_FILE")"
-mkdir -p "$log_dir" 2>/dev/null || true
-touch "$LOG_FILE" 2>/dev/null || {
-  echo "Aviso: nao foi possivel criar '$LOG_FILE' com o usuario atual."
-  echo "       Execute com sudo ou defina LOG_FILE para um caminho gravavel."
-}
+require_cron_service
+prepare_log_file
 
 cron_command="/usr/bin/curl --fail --silent --show-error --max-time $MAX_TIME \"$SPEEDTEST_URL\" >> \"$LOG_FILE\" 2>&1"
 cron_line="$SCHEDULE $cron_command $MARKER"
